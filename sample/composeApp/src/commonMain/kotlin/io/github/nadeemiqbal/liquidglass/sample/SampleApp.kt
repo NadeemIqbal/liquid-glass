@@ -294,7 +294,6 @@ fun SampleApp() {
                 if (showDialog) {
                     GlassDialog(
                         onDismissRequest = { showDialog = false },
-                        tint = resolvedTint,
                         borderHighlight = resolvedSheen,
                         grain = grain,
                     ) {
@@ -329,7 +328,6 @@ fun SampleApp() {
                 if (showSheet) {
                     GlassBottomSheet(
                         onDismissRequest = { showSheet = false },
-                        tint = resolvedTint,
                         borderHighlight = resolvedSheen,
                         grain = grain,
                     ) {

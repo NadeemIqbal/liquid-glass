@@ -52,7 +52,7 @@ code runs without OOMing on a 2 GB Android 11 device and still looks reasonable.
 
 ```toml
 [libraries]
-liquid-glass = { module = "io.github.nadeemiqbal:liquid-glass", version = "0.1.0" }
+liquid-glass = { module = "io.github.nadeemiqbal:liquid-glass", version = "0.2.0" }
 ```
 
 `commonMain` dependencies:
@@ -114,8 +114,46 @@ GlassCard(
         0f to Color.White.copy(alpha = 0.6f),
         1f to Color.Transparent,
     ),
+    grain = 0.04f,         // subtle frosted texture (v0.2.0+)
+    refraction = 0.4f,     // SkSL/AGSL pixel-offset distortion (v0.2.0+)
 ) { /* … */ }
 ```
+
+### Dynamic-color edge sheen
+
+Derive the sheen color from the captured backdrop, instead of the static white gradient:
+
+```kotlin
+GlassCard(
+    state = state,
+    borderHighlight = rememberDynamicSheen(state),
+) { /* … */ }
+```
+
+The library polls the backdrop layer every 500 ms (configurable), averages its pixels, and
+produces a vertical-gradient brush from that color. Falls back to the static brush on platforms
+where backdrop sampling isn't available (e.g. wasmJs).
+
+### Dialogs and bottom sheets
+
+```kotlin
+if (showDialog) {
+    GlassDialog(onDismissRequest = { showDialog = false }) {
+        Text("Material 3 Dialog with a liquid-glass surface.")
+    }
+}
+
+if (showSheet) {
+    GlassBottomSheet(onDismissRequest = { showSheet = false }) {
+        Text("Material 3 ModalBottomSheet with a liquid-glass surface.")
+        // …list items, etc.
+    }
+}
+```
+
+Both dialogs and bottom sheets host their own `LiquidGlassState`, so the glass samples the
+dialog's own composition (typically just the system scrim), not the host activity behind it.
+This matches how `Modifier.blur` and `haze` behave with dialogs.
 
 Force a specific tier (e.g. for a brand-mandated "Full everywhere" experience):
 
@@ -137,10 +175,14 @@ val state = rememberLiquidGlassState(LiquidGlassQuality.Fallback)
 | `rememberPlatformLiquidGlassQuality()` | Platform-detected tier (`@Composable expect`)              |
 | `rememberLiquidGlassState(quality)` | Holds the shared backdrop `GraphicsLayer` (or `null` for Fallback) |
 | `Modifier.liquidGlassSource(state)` | Marks the backdrop composable                                |
-| `Modifier.liquidGlass(state, …)`    | Marks the glass surface                                      |
+| `Modifier.liquidGlass(state, …)`    | Marks the glass surface — supports blur, saturation, tint, sheen, **grain**, **refraction** |
 | `GlassCard(state, …, content)`  | `Modifier.liquidGlass` wrapped around a padded `Box`             |
 | `GlassButton(state, onClick, …)`| Pill-shaped clickable glass surface                              |
 | `GlassNavBar(state, …, content)`| `Modifier.liquidGlass` over a status-bar-padded top bar          |
+| `GlassDialog(onDismissRequest, …, content)` | Material 3 `Dialog` with a glass surface             |
+| `GlassBottomSheet(onDismissRequest, …, content)` | Material 3 `ModalBottomSheet` with a glass surface |
+| `rememberDynamicSheen(state, …)`| Edge-sheen `Brush` sampled from the captured backdrop's average color |
+| `rememberGlassNoiseTile(seed, size)` | Procedural noise `ImageBitmap` for the `grain` parameter    |
 | `LiquidGlassDefaults`           | Per-tier `blurRadius`, `saturation`, `downsampleFactor`, tints   |
 
 ## Comparison
@@ -154,11 +196,16 @@ val state = rememberLiquidGlassState(LiquidGlassQuality.Fallback)
 
 ## Roadmap
 
-- [ ] `GlassDialog` and `GlassBottomSheet` Material 3 wrappers
-- [ ] Dynamic-color edge sheen (sample from the captured backdrop)
-- [ ] Android-only `RenderNode` direct path for fewer copies on API 31+
-- [ ] Optional grain / noise overlay
-- [ ] Refraction shader (Sk SL) on Skia-backed targets
+- [x] `GlassDialog` and `GlassBottomSheet` Material 3 wrappers — *shipped in v0.2.0*
+- [x] Dynamic-color edge sheen (sample from the captured backdrop) — *shipped in v0.2.0*
+- [x] Android-only single-pass chained `RenderEffect` (blur + saturation) on API 31+ — *shipped in v0.2.0*
+- [x] Optional grain / noise overlay — *shipped in v0.2.0*
+- [x] Refraction shader (SkSL on Skia targets, AGSL on Android API 33+) — *shipped in v0.2.0*
+
+### Future
+- Opt-in `Modifier.iosNativeGlass()` interop using `UIVisualEffectView` / `UIGlassEffect` on iOS 26+
+- Animated refraction (time-driven uniforms)
+- Vary the refraction pattern (caustics, droplets) via additional SkSL shader sources
 
 ## Contributing
 

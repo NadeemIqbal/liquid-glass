@@ -19,7 +19,7 @@ val libVersion: String =
     (System.getenv("RELEASE_VERSION") ?: findProperty("version") as String?)
         ?.removePrefix("v")
         ?.takeUnless { it.isBlank() || it == "unspecified" }
-        ?: "0.1.0"
+        ?: "0.2.0"
 
 group = "io.github.nadeemiqbal"
 version = libVersion
@@ -70,6 +70,14 @@ kotlin {
             dependencies {
                 implementation(compose.desktop.currentOs)
             }
+        }
+
+        // `skikoMain` shares Skia-specific code across all Skia-backed targets
+        // (Desktop, iOS, Web). v0.2.0's SkSL refraction shader and the no-op chained
+        // RenderEffect actual live here so a single shader source serves three platforms.
+        val skikoMain by creating { dependsOn(commonMain.get()) }
+        listOf("desktopMain", "iosX64Main", "iosArm64Main", "iosSimulatorArm64Main", "wasmJsMain").forEach { name ->
+            named(name) { dependsOn(skikoMain) }
         }
 
         // Compose UI tests use `compose.uiTest` (Skiko-backed) which has no Android

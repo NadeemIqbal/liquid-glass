@@ -7,6 +7,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-05-17
+
+### Added
+- `GlassDialog` — Material 3 `Dialog` whose surface is a liquid-glass card. Hosts its own
+  `LiquidGlassState`. Documented limitation: the glass samples the dialog's own composition
+  (typically the system scrim), not the host activity behind it — dialogs render in a separate
+  system overlay window on Android.
+- `GlassBottomSheet` — Material 3 `ModalBottomSheet` with a liquid-glass surface; same
+  composition-window caveat as `GlassDialog`.
+- `rememberDynamicSheen(state, ...)` — derives the edge-sheen `Brush` from the captured backdrop's
+  average color. Polls every 500ms (configurable) using `GraphicsLayer.toImageBitmap()` +
+  `LiquidGlassMath.averageColor`. Falls back to the static white gradient when the platform
+  cannot read the backdrop (e.g. wasmJs) or when the tier is `Fallback`.
+- `grain: Float` and `grainSeed: Long` parameters on `Modifier.liquidGlass`, `GlassCard`,
+  `GlassButton`, `GlassNavBar`, `GlassDialog`, and `GlassBottomSheet` — tiled procedural noise
+  overlay (`rememberGlassNoiseTile`) drawn before the composable's own content. Default `0f`
+  (off). Works in every tier including Fallback (no offscreen allocation needed).
+- `refraction: Float` parameter — SkSL/AGSL pixel-offset distortion of the backdrop, chained
+  before the blur+saturation step.
+  - **Skia targets** (Desktop, iOS, Web) — `org.jetbrains.skia.RuntimeEffect` with a small
+    SkSL shader (uniform `size`, `strength`).
+  - **Android API 33+** — equivalent AGSL via `android.graphics.RuntimeShader`.
+  - **Android < 33** and **Fallback tier** — silently no-op.
+- `LiquidGlassMath.averageColor(ImageBitmap, downsampleGrid)` — public helper used internally
+  by `rememberDynamicSheen` and unit-tested.
+- Internal: single-pass chained `RenderEffect` (blur + saturation) on Android API 31+ via
+  `RenderEffect.createChainEffect`; cross-platform `composeRenderEffects(outer, inner)`
+  expect/actual chains refraction → blur, implemented with `createChainEffect` on Android and
+  `ImageFilter.makeCompose` on Skia.
+
+### Changed
+- `skikoMain` intermediate source set added to the library's Gradle config, shared across
+  Desktop, iOS, and wasmJs for SkSL shader code and Skia-only chained effects.
+- Existing call sites of `Modifier.liquidGlass(state)`, `GlassCard`, etc. render identically to
+  v0.1.0 — every new parameter defaults to `0f` / off / static.
+
+[0.2.0]: https://github.com/NadeemIqbal/liquid-glass/releases/tag/v0.2.0
+
 ## [0.1.0] - 2026-05-16
 
 ### Added
@@ -34,5 +72,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Compose UI tests in `skikoTest` verifying allocation behavior across tiers.
 - Targets: Android, iOS (x64, arm64, simulatorArm64), Desktop (JVM), Web (wasmJs).
 
-[Unreleased]: https://github.com/NadeemIqbal/liquid-glass/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/NadeemIqbal/liquid-glass/compare/v0.2.0...HEAD
 [0.1.0]: https://github.com/NadeemIqbal/liquid-glass/releases/tag/v0.1.0

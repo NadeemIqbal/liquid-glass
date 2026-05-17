@@ -27,6 +27,9 @@ fun GlassCard(
     saturation: Float = LiquidGlassDefaults.forQuality(state.quality).saturation,
     tint: Color = Color.Unspecified,
     borderHighlight: Brush = LiquidGlassDefaults.borderBrush(),
+    grain: Float = 0f,
+    grainSeed: Long = 0L,
+    refraction: Float = 0f,
     contentPadding: PaddingValues = PaddingValues(16.dp),
     content: @Composable () -> Unit,
 ) {
@@ -38,6 +41,9 @@ fun GlassCard(
             saturation = saturation,
             tint = tint,
             borderHighlight = borderHighlight,
+            grain = grain,
+            grainSeed = grainSeed,
+            refraction = refraction,
         ),
     ) {
         Box(Modifier.padding(contentPadding)) { content() }

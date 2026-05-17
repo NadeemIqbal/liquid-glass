@@ -42,6 +42,9 @@ fun GlassNavBar(
     saturation: Float = LiquidGlassDefaults.forQuality(state.quality).saturation,
     tint: Color = Color.Unspecified,
     borderHighlight: Brush = LiquidGlassDefaults.borderBrush(),
+    grain: Float = 0f,
+    grainSeed: Long = 0L,
+    refraction: Float = 0f,
     contentPadding: PaddingValues = PaddingValues(horizontal = 16.dp),
     content: @Composable RowScope.() -> Unit,
 ) {
@@ -56,6 +59,9 @@ fun GlassNavBar(
                 saturation = saturation,
                 tint = tint,
                 borderHighlight = borderHighlight,
+                grain = grain,
+                grainSeed = grainSeed,
+                refraction = refraction,
             )
             .drawWithCache {
                 val strokePx = 0.5.dp.toPx()

@@ -7,7 +7,6 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,10 +16,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
@@ -48,12 +47,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import io.github.nadeemiqbal.liquidglass.GlassBottomSheet
 import io.github.nadeemiqbal.liquidglass.GlassButton
 import io.github.nadeemiqbal.liquidglass.GlassCard
+import io.github.nadeemiqbal.liquidglass.GlassDialog
 import io.github.nadeemiqbal.liquidglass.GlassNavBar
 import io.github.nadeemiqbal.liquidglass.LiquidGlassDefaults
 import io.github.nadeemiqbal.liquidglass.LiquidGlassQuality
 import io.github.nadeemiqbal.liquidglass.liquidGlassSource
+import io.github.nadeemiqbal.liquidglass.rememberDynamicSheen
 import io.github.nadeemiqbal.liquidglass.rememberLiquidGlassState
 import io.github.nadeemiqbal.liquidglass.rememberPlatformLiquidGlassQuality
 import kotlin.math.cos
@@ -61,6 +63,7 @@ import kotlin.math.sin
 
 private enum class QualitySelection { Auto, Full, Medium, Fallback }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SampleApp() {
     var darkTheme by remember { mutableStateOf(false) }
@@ -78,6 +81,11 @@ fun SampleApp() {
         var blurDp by remember { mutableStateOf<Float?>(null) }
         var saturation by remember { mutableStateOf<Float?>(null) }
         var tintAlpha by remember { mutableStateOf<Float?>(null) }
+        var grain by remember { mutableStateOf(0f) }
+        var refraction by remember { mutableStateOf(0f) }
+        var dynamicSheen by remember { mutableStateOf(false) }
+        var showDialog by remember { mutableStateOf(false) }
+        var showSheet by remember { mutableStateOf(false) }
 
         // Rebuild state when quality changes so the underlying GraphicsLayer is reallocated.
         key(effectiveQuality) {
@@ -87,6 +95,8 @@ fun SampleApp() {
             val resolvedSaturation = saturation ?: tier.saturation
             val baseTint = LiquidGlassDefaults.tintFor(darkTheme)
             val resolvedTint = baseTint.copy(alpha = tintAlpha ?: baseTint.alpha)
+            val resolvedSheen: Brush =
+                if (dynamicSheen) rememberDynamicSheen(state) else LiquidGlassDefaults.borderBrush()
 
             Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
                 ColorfulBackdrop(
@@ -105,6 +115,9 @@ fun SampleApp() {
                         blurRadius = resolvedBlur,
                         saturation = resolvedSaturation,
                         tint = resolvedTint,
+                        borderHighlight = resolvedSheen,
+                        grain = grain,
+                        refraction = refraction,
                     ) {
                         Text(
                             "Liquid Glass",
@@ -114,7 +127,7 @@ fun SampleApp() {
                         )
                     }
 
-                    Spacer(Modifier.height(80.dp))
+                    Spacer(Modifier.height(60.dp))
 
                     GlassCard(
                         state = state,
@@ -124,6 +137,9 @@ fun SampleApp() {
                         blurRadius = resolvedBlur,
                         saturation = resolvedSaturation,
                         tint = resolvedTint,
+                        borderHighlight = resolvedSheen,
+                        grain = grain,
+                        refraction = refraction,
                     ) {
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally,
@@ -137,30 +153,51 @@ fun SampleApp() {
                             )
                             Text(
                                 "Drop a Modifier on any composable and you get backdrop blur, " +
-                                    "chroma lift, and an edge sheen. The library auto-tiers itself " +
-                                    "to keep low-end Android and older iOS devices happy.",
+                                    "chroma lift, edge sheen, optional grain and SkSL refraction. " +
+                                    "Auto-tiers itself to keep low-end Android and older iOS happy.",
                                 color = if (darkTheme) Color(0xCCFFFFFF) else Color(0xCC000000),
                                 fontSize = 14.sp,
                                 textAlign = TextAlign.Center,
                             )
                             Spacer(Modifier.height(4.dp))
-                            GlassButton(
-                                state = state,
-                                onClick = { darkTheme = !darkTheme },
-                                blurRadius = resolvedBlur,
-                                saturation = resolvedSaturation,
-                                tint = resolvedTint,
-                            ) {
-                                Text(
-                                    if (darkTheme) "Switch to light" else "Switch to dark",
-                                    color = if (darkTheme) Color.White else Color.Black,
-                                    fontWeight = FontWeight.Medium,
-                                )
+                            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                GlassButton(
+                                    state = state,
+                                    onClick = { showDialog = true },
+                                    blurRadius = resolvedBlur,
+                                    saturation = resolvedSaturation,
+                                    tint = resolvedTint,
+                                    borderHighlight = resolvedSheen,
+                                    grain = grain,
+                                    refraction = refraction,
+                                ) {
+                                    Text(
+                                        "Show Dialog",
+                                        color = if (darkTheme) Color.White else Color.Black,
+                                        fontWeight = FontWeight.Medium,
+                                    )
+                                }
+                                GlassButton(
+                                    state = state,
+                                    onClick = { showSheet = true },
+                                    blurRadius = resolvedBlur,
+                                    saturation = resolvedSaturation,
+                                    tint = resolvedTint,
+                                    borderHighlight = resolvedSheen,
+                                    grain = grain,
+                                    refraction = refraction,
+                                ) {
+                                    Text(
+                                        "Show Sheet",
+                                        color = if (darkTheme) Color.White else Color.Black,
+                                        fontWeight = FontWeight.Medium,
+                                    )
+                                }
                             }
                         }
                     }
 
-                    Spacer(Modifier.height(24.dp))
+                    Spacer(Modifier.height(20.dp))
 
                     Card(
                         modifier = Modifier
@@ -172,7 +209,7 @@ fun SampleApp() {
                         ),
                     ) {
                         Column(
-                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalArrangement = Arrangement.spacedBy(6.dp),
                             modifier = Modifier.padding(16.dp),
                         ) {
                             Text(
@@ -216,6 +253,32 @@ fun SampleApp() {
                                 range = 0f..0.8f,
                                 enabled = true,
                             )
+                            LabeledSlider(
+                                label = "Grain (${niceFloat(grain)})",
+                                value = grain,
+                                onValueChange = { grain = it },
+                                range = 0f..0.15f,
+                                enabled = true,
+                            )
+                            LabeledSlider(
+                                label = "Refraction (${niceFloat(refraction)})",
+                                value = refraction,
+                                onValueChange = { refraction = it },
+                                range = 0f..1f,
+                                enabled = controlsEnabled,
+                            )
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                modifier = Modifier.fillMaxWidth(),
+                            ) {
+                                Text("Dynamic edge sheen")
+                                Switch(
+                                    checked = dynamicSheen,
+                                    onCheckedChange = { dynamicSheen = it },
+                                    enabled = controlsEnabled,
+                                )
+                            }
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -224,6 +287,82 @@ fun SampleApp() {
                                 Text("Dark theme")
                                 Switch(checked = darkTheme, onCheckedChange = { darkTheme = it })
                             }
+                        }
+                    }
+                }
+
+                if (showDialog) {
+                    GlassDialog(
+                        onDismissRequest = { showDialog = false },
+                        quality = effectiveQuality,
+                        blurRadius = resolvedBlur,
+                        saturation = resolvedSaturation,
+                        tint = resolvedTint,
+                        borderHighlight = resolvedSheen,
+                        grain = grain,
+                        refraction = refraction,
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                        ) {
+                            Text(
+                                "GlassDialog",
+                                color = if (darkTheme) Color.White else Color.Black,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 20.sp,
+                            )
+                            Text(
+                                "Material 3 Dialog with a liquid-glass surface. Hosts its own " +
+                                    "LiquidGlassState — the glass samples the dialog's own " +
+                                    "composition (system scrim), not the host activity behind it.",
+                                color = if (darkTheme) Color(0xCCFFFFFF) else Color(0xCC000000),
+                                fontSize = 13.sp,
+                                textAlign = TextAlign.Center,
+                            )
+                            Text(
+                                "Tap outside to dismiss.",
+                                color = if (darkTheme) Color(0x99FFFFFF) else Color(0x99000000),
+                                fontSize = 12.sp,
+                                textAlign = TextAlign.Center,
+                            )
+                        }
+                    }
+                }
+
+                if (showSheet) {
+                    GlassBottomSheet(
+                        onDismissRequest = { showSheet = false },
+                        quality = effectiveQuality,
+                        blurRadius = resolvedBlur,
+                        saturation = resolvedSaturation,
+                        tint = resolvedTint,
+                        borderHighlight = resolvedSheen,
+                        grain = grain,
+                        refraction = refraction,
+                    ) {
+                        Text(
+                            "GlassBottomSheet",
+                            color = if (darkTheme) Color.White else Color.Black,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 20.sp,
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        Text(
+                            "Material 3 ModalBottomSheet with a liquid-glass surface.",
+                            color = if (darkTheme) Color(0xCCFFFFFF) else Color(0xCC000000),
+                            fontSize = 13.sp,
+                        )
+                        Spacer(Modifier.height(16.dp))
+                        listOf("Settings", "Privacy", "About").forEach { item ->
+                            Text(
+                                item,
+                                color = if (darkTheme) Color.White else Color.Black,
+                                fontSize = 16.sp,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 12.dp),
+                            )
                         }
                     }
                 }
@@ -241,7 +380,7 @@ private fun LabeledSlider(
     enabled: Boolean,
 ) {
     Column {
-        Text(label, fontSize = 12.sp)
+        Text(label, fontSize = 11.sp)
         Slider(
             value = value,
             onValueChange = onValueChange,
@@ -307,7 +446,6 @@ private fun ColorfulBackdrop(modifier: Modifier) {
                     )
                 }
             }
-            .systemBarsPadding(),
     )
 }
 

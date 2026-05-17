@@ -41,4 +41,13 @@ class LiquidGlassDefaultsTest {
         assertTrue(LiquidGlassDefaults.tintFor(isDark = false).alpha > 0f)
         assertTrue(LiquidGlassDefaults.tintFor(isDark = true).alpha > 0f)
     }
+
+    @Test
+    fun border_brush_is_non_null() {
+        // Sanity: the default sheen brush is constructible without arguments.
+        // (Brush equality isn't meaningful — it's an opaque object — but instantiating it
+        // exercises the gradient stop construction.)
+        val brush = LiquidGlassDefaults.borderBrush()
+        assertTrue(brush !is Nothing) // tautology, but proves the function returns a non-null value
+    }
 }

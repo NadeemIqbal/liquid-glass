@@ -52,7 +52,7 @@ code runs without OOMing on a 2 GB Android 11 device and still looks reasonable.
 
 ```toml
 [libraries]
-liquid-glass = { module = "io.github.nadeemiqbal:liquid-glass", version = "0.2.0" }
+liquid-glass = { module = "io.github.nadeemiqbal:liquid-glass", version = "0.2.1" }
 ```
 
 `commonMain` dependencies:

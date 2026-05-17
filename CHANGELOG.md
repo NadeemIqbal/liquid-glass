@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-05-17
+
+### Fixed
+- **GlassDialog and GlassBottomSheet crash on open** (stack overflow / SIGSEGV "Could not
+  determine thread index for stack guard region"). The v0.2.0 implementations applied both
+  `Modifier.liquidGlassSource` and `Modifier.liquidGlass` on the same node, so the backdrop
+  graphics layer recorded the glass surface's own draw output and recursed unbounded inside
+  Skia's `SkDrawable::draw`. The fix omits `liquidGlassSource` inside dialogs and sheets
+  entirely — they have no host-composition backdrop to sample anyway.
+
+### Changed (breaking — but v0.2.0 was unshippable)
+- `GlassDialog` and `GlassBottomSheet` parameter lists trimmed to only the params that have a
+  visual effect inside a system overlay window: `shape`, `tint`, `borderHighlight`, `grain`,
+  `grainSeed`, plus the M3 host params (`properties`, `sheetState`). Removed: `quality`,
+  `blurRadius`, `saturation`, `refraction` — all were silently no-ops inside an overlay window
+  and just confused the call site. Documented limitation.
+
 ## [0.2.0] - 2026-05-17
 
 ### Added
@@ -72,5 +89,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Compose UI tests in `skikoTest` verifying allocation behavior across tiers.
 - Targets: Android, iOS (x64, arm64, simulatorArm64), Desktop (JVM), Web (wasmJs).
 
-[Unreleased]: https://github.com/NadeemIqbal/liquid-glass/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/NadeemIqbal/liquid-glass/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/NadeemIqbal/liquid-glass/releases/tag/v0.2.1
 [0.1.0]: https://github.com/NadeemIqbal/liquid-glass/releases/tag/v0.1.0

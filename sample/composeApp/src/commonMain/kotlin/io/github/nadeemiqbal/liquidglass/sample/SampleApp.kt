@@ -294,13 +294,9 @@ fun SampleApp() {
                 if (showDialog) {
                     GlassDialog(
                         onDismissRequest = { showDialog = false },
-                        quality = effectiveQuality,
-                        blurRadius = resolvedBlur,
-                        saturation = resolvedSaturation,
                         tint = resolvedTint,
                         borderHighlight = resolvedSheen,
                         grain = grain,
-                        refraction = refraction,
                     ) {
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally,
@@ -333,13 +329,9 @@ fun SampleApp() {
                 if (showSheet) {
                     GlassBottomSheet(
                         onDismissRequest = { showSheet = false },
-                        quality = effectiveQuality,
-                        blurRadius = resolvedBlur,
-                        saturation = resolvedSaturation,
                         tint = resolvedTint,
                         borderHighlight = resolvedSheen,
                         grain = grain,
-                        refraction = refraction,
                     ) {
                         Text(
                             "GlassBottomSheet",

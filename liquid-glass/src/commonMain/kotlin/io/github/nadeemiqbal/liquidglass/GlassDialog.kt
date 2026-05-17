@@ -3,61 +3,55 @@ package io.github.nadeemiqbal.liquidglass
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 
 /**
- * Material 3-style dialog whose surface is a liquid-glass card. Internally hosts its own
- * `LiquidGlassState` — the glass inside the dialog samples whatever sits **inside the dialog's
- * own composition** (typically the system scrim), not the host activity behind it. This is the
- * same limitation any `Modifier.blur`-style backdrop sampling has on Android, where dialogs
- * render in a separate system overlay window.
+ * Material 3-style dialog whose surface is a liquid-glass card.
  *
- * For "glass over my app's content" you don't want a Dialog — use `GlassCard` placed in the host
- * composition instead.
+ * **Limitation: no backdrop blur.** Dialogs render in a separate system overlay window
+ * (Android) or window-level layer (other platforms), so there is no host-composition content
+ * for the glass surface to sample. This composable therefore renders **[tint] + edge sheen +
+ * (optional) [grain]** only — no blur, no chroma lift, no refraction. The result still reads
+ * as glass against the system scrim that `Dialog` paints behind itself.
+ *
+ * For "glass blurring my app's content," don't use a `GlassDialog` — place a `GlassCard`
+ * directly in the host composition with `Modifier.liquidGlassSource` on the backdrop above it.
  */
 @Composable
 fun GlassDialog(
     onDismissRequest: () -> Unit,
     modifier: Modifier = Modifier,
-    quality: LiquidGlassQuality = rememberPlatformLiquidGlassQuality(),
     properties: DialogProperties = DialogProperties(),
     shape: Shape = LiquidGlassDefaults.shape,
-    blurRadius: Dp = LiquidGlassDefaults.forQuality(quality).blurRadius,
-    saturation: Float = LiquidGlassDefaults.forQuality(quality).saturation,
     tint: Color = Color.Unspecified,
     borderHighlight: Brush = LiquidGlassDefaults.borderBrush(),
     grain: Float = 0f,
     grainSeed: Long = 0L,
-    refraction: Float = 0f,
     contentPadding: PaddingValues = PaddingValues(24.dp),
     content: @Composable BoxScope.() -> Unit,
 ) {
     Dialog(onDismissRequest = onDismissRequest, properties = properties) {
-        val state = rememberLiquidGlassState(quality)
+        // Fallback-quality state: zero offscreen alloc, draws tint + sheen + grain only.
+        // Applying `liquidGlassSource` here would recursively record the glass's own draw output
+        // (same node is both source and surface), blowing the Skia draw stack — so it's omitted.
+        val state = rememberLiquidGlassState(LiquidGlassQuality.Fallback)
         Box(
-            modifier
-                .liquidGlassSource(state)
-                .liquidGlass(
-                    state = state,
-                    shape = shape,
-                    blurRadius = blurRadius,
-                    saturation = saturation,
-                    tint = tint,
-                    borderHighlight = borderHighlight,
-                    grain = grain,
-                    grainSeed = grainSeed,
-                    refraction = refraction,
-                ),
+            modifier.liquidGlass(
+                state = state,
+                shape = shape,
+                tint = tint,
+                borderHighlight = borderHighlight,
+                grain = grain,
+                grainSeed = grainSeed,
+            ),
         ) {
             Box(Modifier.padding(contentPadding)) { content() }
         }

@@ -1,5 +1,6 @@
 package io.github.nadeemiqbal.liquidglass
 
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.PaddingValues
@@ -14,16 +15,14 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 
 /**
- * Material 3-style dialog whose surface is a liquid-glass card.
+ * Material 3-style dialog whose surface looks like an iOS frosted-glass card.
  *
- * **Limitation: no backdrop blur.** Dialogs render in a separate system overlay window
- * (Android) or window-level layer (other platforms), so there is no host-composition content
- * for the glass surface to sample. This composable therefore renders **[tint] + edge sheen +
- * (optional) [grain]** only — no blur, no chroma lift, no refraction. The result still reads
- * as glass against the system scrim that `Dialog` paints behind itself.
- *
- * For "glass blurring my app's content," don't use a `GlassDialog` — place a `GlassCard`
- * directly in the host composition with `Modifier.liquidGlassSource` on the backdrop above it.
+ * **Visual contract.** Dialogs render in a separate system overlay window (Android) or
+ * window-level layer (other platforms), so there is no host-composition content for a real
+ * blur to sample. This composable therefore paints a near-opaque [tint] (so the dialog reads
+ * as a solid sheet, not a see-through ghost), plus the edge sheen and optional [grain]. The
+ * default [tint] is [LiquidGlassDefaults.opaqueTintFor] — pass `Color.Unspecified` to keep it,
+ * or override for a custom translucency.
  */
 @Composable
 fun GlassDialog(
@@ -39,15 +38,20 @@ fun GlassDialog(
     content: @Composable BoxScope.() -> Unit,
 ) {
     Dialog(onDismissRequest = onDismissRequest, properties = properties) {
+        val resolvedTint = if (tint == Color.Unspecified) {
+            LiquidGlassDefaults.opaqueTintFor(isSystemInDarkTheme())
+        } else {
+            tint
+        }
         // Fallback-quality state: zero offscreen alloc, draws tint + sheen + grain only.
-        // Applying `liquidGlassSource` here would recursively record the glass's own draw output
-        // (same node is both source and surface), blowing the Skia draw stack — so it's omitted.
+        // Applying `liquidGlassSource` here would recursively record the glass surface's own
+        // draw output (same node = both source AND surface) and blow the Skia draw stack.
         val state = rememberLiquidGlassState(LiquidGlassQuality.Fallback)
         Box(
             modifier.liquidGlass(
                 state = state,
                 shape = shape,
-                tint = tint,
+                tint = resolvedTint,
                 borderHighlight = borderHighlight,
                 grain = grain,
                 grainSeed = grainSeed,

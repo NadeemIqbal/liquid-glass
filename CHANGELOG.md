@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.2] - 2026-05-17
+
+### Fixed
+- **`GlassDialog` and `GlassBottomSheet` rendered as near-invisible ghosts** in v0.2.1.
+  The 0x4D-alpha `tintFor()` default is right for surfaces sitting over a blurred backdrop,
+  but inside a dialog/sheet there's no backdrop to blur, so the surface degenerated to a
+  barely-tinted rectangle floating over the host UI (with the underlying content visibly
+  bleeding through). They now default to the new opaque tint and read as solid iOS-style
+  sheets/dialogs.
+
+### Added
+- `LiquidGlassDefaults.opaqueTintFor(isDark)` (plus `lightOpaqueTint` / `darkOpaqueTint`
+  constants) — near-opaque (0xF2 alpha) surface colors meant for stand-alone glass surfaces
+  that have no backdrop to sample. `GlassDialog` and `GlassBottomSheet` default to this.
+
+### Changed
+- `GlassBottomSheet` default `shape` is now `RoundedCornerShape(topStart = 28.dp, topEnd =
+  28.dp)` — matches iOS sheet styling instead of the previous all-corners-rounded card shape.
+- `GlassBottomSheet` brings back the M3 drag handle (toggle via `showDragHandle` parameter,
+  defaults to `true`) and bumps the scrim opacity from 0.32 → 0.5 for a more typical sheet feel.
+
+[0.2.2]: https://github.com/NadeemIqbal/liquid-glass/releases/tag/v0.2.2
+
 ## [0.2.1] - 2026-05-17
 
 ### Fixed
@@ -89,6 +112,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Compose UI tests in `skikoTest` verifying allocation behavior across tiers.
 - Targets: Android, iOS (x64, arm64, simulatorArm64), Desktop (JVM), Web (wasmJs).
 
-[Unreleased]: https://github.com/NadeemIqbal/liquid-glass/compare/v0.2.1...HEAD
+[Unreleased]: https://github.com/NadeemIqbal/liquid-glass/compare/v0.2.2...HEAD
 [0.2.1]: https://github.com/NadeemIqbal/liquid-glass/releases/tag/v0.2.1
 [0.1.0]: https://github.com/NadeemIqbal/liquid-glass/releases/tag/v0.1.0

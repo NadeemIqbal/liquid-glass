@@ -27,6 +27,20 @@ object LiquidGlassDefaults {
     /** Picks the right tint for the current theme. */
     fun tintFor(isDark: Boolean): Color = if (isDark) darkTint else lightTint
 
+    /** Near-opaque white surface for use over light backgrounds. */
+    val lightOpaqueTint: Color = Color(0xF2FFFFFF)
+
+    /** Near-opaque dark surface for use over dark backgrounds. */
+    val darkOpaqueTint: Color = Color(0xF21A1A1A)
+
+    /**
+     * Near-opaque tint suitable for stand-alone glass surfaces that have no host-composition
+     * backdrop to sample — typically the inside of a [GlassDialog] or [GlassBottomSheet] where
+     * the blur step is a no-op. Use [tintFor] for surfaces that DO sit over a blurred backdrop
+     * (the regular tint is intentionally transparent so the blurred content shows through).
+     */
+    fun opaqueTintFor(isDark: Boolean): Color = if (isDark) darkOpaqueTint else lightOpaqueTint
+
     /**
      * Default edge-sheen brush — a top-down white gradient that gives the surface a subtle
      * specular highlight along its border. Use the [Brush] as the `borderHighlight` parameter

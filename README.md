@@ -52,7 +52,7 @@ code runs without OOMing on a 2 GB Android 11 device and still looks reasonable.
 
 ```toml
 [libraries]
-liquid-glass = { module = "io.github.nadeemiqbal:liquid-glass", version = "0.2.2" }
+liquid-glass = { module = "io.github.nadeemiqbal:liquid-glass", version = "0.2.3" }
 ```
 
 `commonMain` dependencies:
@@ -76,8 +76,11 @@ fun Screen() {
 
     Box(Modifier.fillMaxSize()) {
         // 1) Anything inside this box becomes the backdrop that the glass samples from.
+        //    Drop a `scenery.png` into
+        //    `composeApp/src/commonMain/composeResources/drawable/`
+        //    so `Res.drawable.scenery` is generated and shared across all targets.
         Image(
-            painter = painterResource(R.drawable.scenery),
+            painter = painterResource(Res.drawable.scenery),
             contentDescription = null,
             contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize().liquidGlassSource(state),
@@ -88,11 +91,15 @@ fun Screen() {
             state = state,
             modifier = Modifier.align(Alignment.Center).padding(24.dp),
         ) {
-            Text("Frosted, light-refracting surface — drop-in")
+            Text("Frosted, light-refracting surface, drop-in")
         }
     }
 }
 ```
+
+> Don't want to add an image? The bundled sample (`sample/composeApp/.../SampleApp.kt`)
+> uses a programmatic `ColorfulBackdrop` composable with `liquidGlassSource(state)`
+> applied to it, and demonstrates every tier without any resource setup.
 
 That's it. Same code on Android, iOS, Desktop, and Web — and the same code on a low-RAM
 Android 11 device will quietly fall back to a flat tint + edge sheen with **no GraphicsLayer

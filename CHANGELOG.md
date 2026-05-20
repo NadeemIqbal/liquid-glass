@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.3] - 2026-05-17
+
+### Changed (breaking — but v0.2.0–0.2.2 were unshippable)
+- **`GlassDialog` and `GlassBottomSheet` now require a `state: LiquidGlassState` parameter.**
+  Pass the same state used by `Modifier.liquidGlassSource(state)` in the host composition.
+  The dialog/sheet samples that recorded backdrop and renders a real frosted-glass surface —
+  blur + chroma + sheen + grain — instead of the flat opaque card the previous versions
+  degraded to.
+- Re-introduced `blurRadius`, `saturation`, and `refraction` parameters now that they have a
+  visual effect again.
+
+### Platform note
+- iOS: dialog and host live in the same `UIWindow`, so the shared GraphicsLayer samples cleanly.
+- Android: the system `Dialog` opens in a separate window; the shared GraphicsLayer may not be
+  reachable from there, producing an empty/black backdrop inside the dialog. Workaround: use
+  `Popup` (in-window) with a `GlassCard` instead. Documented in the KDoc.
+
+### Docs
+- README quick-start now uses the CMP-correct `Res.drawable.scenery` from
+  `composeResources` instead of the Android-only `R.drawable.scenery`, and notes where
+  to place the image file. Reported via Reddit.
+
+[0.2.3]: https://github.com/NadeemIqbal/liquid-glass/releases/tag/v0.2.3
+
 ## [0.2.2] - 2026-05-17
 
 ### Fixed
@@ -112,6 +136,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Compose UI tests in `skikoTest` verifying allocation behavior across tiers.
 - Targets: Android, iOS (x64, arm64, simulatorArm64), Desktop (JVM), Web (wasmJs).
 
-[Unreleased]: https://github.com/NadeemIqbal/liquid-glass/compare/v0.2.2...HEAD
+[Unreleased]: https://github.com/NadeemIqbal/liquid-glass/compare/v0.2.3...HEAD
+[0.2.2]: https://github.com/NadeemIqbal/liquid-glass/releases/tag/v0.2.2
 [0.2.1]: https://github.com/NadeemIqbal/liquid-glass/releases/tag/v0.2.1
 [0.1.0]: https://github.com/NadeemIqbal/liquid-glass/releases/tag/v0.1.0

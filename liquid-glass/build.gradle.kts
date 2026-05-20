@@ -19,7 +19,7 @@ val libVersion: String =
     (System.getenv("RELEASE_VERSION") ?: findProperty("version") as String?)
         ?.removePrefix("v")
         ?.takeUnless { it.isBlank() || it == "unspecified" }
-        ?: "0.2.2"
+        ?: "0.2.3"
 
 group = "io.github.nadeemiqbal"
 version = libVersion
